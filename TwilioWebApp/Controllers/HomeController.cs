@@ -10,27 +10,41 @@ using Twilio.Types;
 using Twilio.Rest.Api.V2010;
 using Twilio.AspNet.Mvc;
 using Twilio.Rest.Api.V2010.Account;
+using TwilioWebApp.Data;
+using TwilioWebApp.Models;
 
 namespace TwilioWebApp.Controllers
 {
     public class HomeController : TwilioController
     {
-        public ActionResult Index()
+        // localhost:56660/home/index/_5E710IX21
+        public ActionResult Index(String id)
         {
-            String acctSid = ConfigurationManager.AppSettings["TwilioAccountSID"];
-            String authToken = ConfigurationManager.AppSettings["TwilioAuthToken"];
+            if (String.IsNullOrEmpty(id))
+            {
+                return Content("No requestId provided");
+            }
+            else
+            {
+                String acctSid = ConfigurationManager.AppSettings["TwilioAccountSID"];
+                String authToken = ConfigurationManager.AppSettings["TwilioAuthToken"];
 
-            TwilioClient.Init(acctSid, authToken);
+                TwilioClient.Init(acctSid, authToken);
 
-            String fromPhoneNumber = ConfigurationManager.AppSettings["TwilioPhoneNumber"];
-            String toPhoneNumber = ConfigurationManager.AppSettings["MyPhoneNumber"];
+                String fromPhoneNumber = ConfigurationManager.AppSettings["TwilioPhoneNumber"];
+                IRequestPersistor reqHandler = new DbRequestPersistor();
+                TextRequest request = reqHandler.Get(id);
 
-            string messageBody = "What's up @ " + DateTime.Now.ToShortTimeString();
-            var message = MessageResource.Create(body: messageBody,
-                from: new Twilio.Types.PhoneNumber(fromPhoneNumber),
-                to: new Twilio.Types.PhoneNumber(toPhoneNumber));
+                var message = MessageResource.Create(body: request.Body,
+                    from: new Twilio.Types.PhoneNumber(fromPhoneNumber),
+                    to: new Twilio.Types.PhoneNumber(request.ToPhone));
 
-            return Content(message.Sid);
+                request.ResponseTime = DateTime.Now;
+                request.Response = message.Sid;
+                reqHandler.Put(request);
+
+                return Content(message.ToString());
+            }
         }
 
         public ActionResult About()
