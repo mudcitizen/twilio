@@ -26,6 +26,8 @@ namespace TwilioWebApp.Controllers
             }
             else
             {
+
+                id = id.Trim();
                 String acctSid = ConfigurationManager.AppSettings["TwilioAccountSID"];
                 String authToken = ConfigurationManager.AppSettings["TwilioAuthToken"];
 
