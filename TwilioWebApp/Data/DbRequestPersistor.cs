@@ -12,19 +12,13 @@ namespace TwilioWebApp.Data
 {
     public class DbRequestPersistor : IRequestPersistor
     {
-        String ConnectionString;
-        public DbRequestPersistor()
-        {
-            ConnectionStringSettings connStrSettings = ConfigurationManager.ConnectionStrings["Host"];
-            ConnectionString = connStrSettings.ConnectionString;
-        }
+        DbPersistorHelper persistorHelper = new DbPersistorHelper();
 
         public TextRequest Get(string requestId)
         {
             TextRequest tr = new TextRequest();
-            using (OleDbConnection conn = GetConnection())
+            using (OleDbConnection conn = persistorHelper.GetConnection())
             {
-
                 OleDbCommand cmd = conn.CreateCommand();
                 cmd.CommandText = "SELECT * FROM smsSms WHERE Id = ?";
                 cmd.Parameters.AddWithValue("?", requestId);
@@ -41,7 +35,6 @@ namespace TwilioWebApp.Data
                     tr.RequestTime = (DateTime)row["reqTime"];
                     break;
                 }
-
                 conn.Close();
             }
             return tr;
@@ -49,9 +42,8 @@ namespace TwilioWebApp.Data
 
         public void Put(TextRequest request)
         {
-            using (OleDbConnection conn = GetConnection())
+            using (OleDbConnection conn = persistorHelper.GetConnection())
             {
-
                 conn.Open();
                 OleDbCommand cmd = conn.CreateCommand();
                 cmd.CommandText = "UPDATE smsSms SET RespTime = ?, Response = ? WHERE Id = ?";
@@ -63,10 +55,5 @@ namespace TwilioWebApp.Data
             }
         }
 
-        OleDbConnection GetConnection()
-        {
-            OleDbConnection conn = new OleDbConnection(ConnectionString);
-            return conn;
-        }
     }
 }

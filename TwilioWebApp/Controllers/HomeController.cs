@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Collections.Specialized;
 
 using Twilio;
 using Twilio.Types;
@@ -12,6 +13,7 @@ using Twilio.AspNet.Mvc;
 using Twilio.Rest.Api.V2010.Account;
 using TwilioWebApp.Data;
 using TwilioWebApp.Models;
+using Twilio.TwiML;
 
 namespace TwilioWebApp.Controllers
 {
@@ -54,6 +56,26 @@ namespace TwilioWebApp.Controllers
             ViewBag.Message = "Your application description page.";
 
             return View();
+        }
+
+        [HttpPost]
+        public TwiMLResult ReceiveText()
+        {
+            NameValueCollection formData = this.Request.Form;
+        
+            TextReply reply = new TextReply();
+            reply.Id = Guid.NewGuid().ToString();
+            reply.FromPhone = formData["From"].ToString();
+            reply.Received = DateTime.Now;
+            reply.Message = formData["Body"];
+            reply.ProviderId = formData["MessageSid"];
+
+            new DbReplyPersistor().Put(reply);
+
+            var messagingResponse = new MessagingResponse();
+            messagingResponse.Message("10-4 Good buddy");
+
+            return TwiML(messagingResponse);
         }
 
         public ActionResult Contact()
