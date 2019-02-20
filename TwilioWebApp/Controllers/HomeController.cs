@@ -19,8 +19,13 @@ namespace TwilioWebApp.Controllers
 {
     public class HomeController : TwilioController
     {
-        // localhost:56660/home/index/_5E710IX21
-        public ActionResult Index(String id)
+
+        public ActionResult Index()
+        {
+            return View();
+        }
+        // localhost:56660/home/SendText/_5E710IX21
+        public ActionResult SendText(String id)
         {
             if (String.IsNullOrEmpty(id))
             {
