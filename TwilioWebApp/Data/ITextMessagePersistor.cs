@@ -7,9 +7,9 @@ using TwilioWebApp.Models;
 
 namespace TwilioWebApp.Data
 {
-    interface IRequestPersistor
+    interface ITextMessagePersistor
     {
-        TextRequest Get(String requestId);
-        void Put(TextRequest request);
+        TextMessage Get(String requestId);
+        void Put(TextMessage request);
     }
 }

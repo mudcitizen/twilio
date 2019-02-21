@@ -40,16 +40,20 @@ namespace TwilioWebApp.Controllers
 
                 TwilioClient.Init(acctSid, authToken);
 
-                String fromPhoneNumber = ConfigurationManager.AppSettings["TwilioPhoneNumber"];
-                IRequestPersistor reqHandler = new DbRequestPersistor();
-                TextRequest request = reqHandler.Get(id);
+                ITextMessagePersistor reqHandler = new DbTextMessagePersistor();
+                TextMessage request = reqHandler.Get(id);
+                request.Direction = Constants.Direction.Outbound;
 
-                var message = MessageResource.Create(body: request.Body,
-                    from: new Twilio.Types.PhoneNumber(fromPhoneNumber),
+                if (String.IsNullOrEmpty(request.FromPhone))
+                    request.FromPhone = ConfigurationManager.AppSettings["TwilioPhoneNumber"];
+
+                var message = MessageResource.Create(body: request.Message,
+                    from: new Twilio.Types.PhoneNumber(request.FromPhone),
                     to: new Twilio.Types.PhoneNumber(request.ToPhone));
 
-                request.ResponseTime = DateTime.Now;
-                request.Response = message.Sid;
+                request.When = DateTime.Now;
+                request.ProviderId = message.Sid;
+
                 reqHandler.Put(request);
 
                 return Content(message.ToString());
@@ -59,7 +63,6 @@ namespace TwilioWebApp.Controllers
         public ActionResult About()
         {
             ViewBag.Message = "Your application description page.";
-
             return View();
         }
 
@@ -68,14 +71,16 @@ namespace TwilioWebApp.Controllers
         {
             NameValueCollection formData = this.Request.Form;
         
-            TextReply reply = new TextReply();
+            TextMessage reply = new TextMessage();
             reply.Id = Guid.NewGuid().ToString();
             reply.FromPhone = formData["From"].ToString();
-            reply.Received = DateTime.Now;
+            reply.ToPhone = formData["To"].ToString();
+            reply.When = DateTime.Now;
             reply.Message = formData["Body"];
             reply.ProviderId = formData["MessageSid"];
+            reply.Direction = Constants.Direction.Inbound;
 
-            new DbReplyPersistor().Put(reply);
+            new DbTextMessagePersistor().Put(reply);
 
             var messagingResponse = new MessagingResponse();
             messagingResponse.Message("10-4 Good buddy");
@@ -86,7 +91,6 @@ namespace TwilioWebApp.Controllers
         public ActionResult Contact()
         {
             ViewBag.Message = "Your contact page.";
-
             return View();
         }
     }
